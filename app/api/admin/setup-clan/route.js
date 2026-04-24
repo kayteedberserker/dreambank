@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClanMember, issueNairaCard } from '@/app/lib/bridgecard';
+import { registerCardholder, issueNairaCard } from '@/app/lib/bridgecard';
 
 export async function GET() {
   try {
     // 1. Create the person
-    const cardholderId = await createClanMember("System", "Member", "member@oreblogda.com", "08012345678");
+    const cardholderId = await registerCardholder("System", "Member", "member@oreblogda.com", "08012345678");
 
     // 2. Give them a card
     const cardDetails = await issueNairaCard(cardholderId)
