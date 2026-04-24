@@ -5,7 +5,7 @@ import { registerCardholder, issueNairaCard } from '@/app/lib/bridgecard';
 export async function GET() {
     try {
         // 1. Create the person
-        const regResult = await registerCardholder("System", "Member", "member@oreblogda.com", "08012345678", "22222222222");
+        const regResult = await registerCardholder("System", "Member", "member@oreblogda.com", "07012345678", "22222879222");
 
         if (regResult.status !== "success") {
             return NextResponse.json({ error: "Registration failed", details: regResult }, { status: 400 });
