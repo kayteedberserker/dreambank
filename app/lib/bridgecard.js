@@ -1,10 +1,22 @@
-// src/app/lib/bridgecard.js
-import { AES256 } from 'aes-everywhere';
+import crypto from 'crypto';
 
 // Use process.env directly inside the functions to ensure they 
 // always grab the latest value from the environment.
 const getSecretKey = () => process.env.BRIDGECARD_SECRET_KEY;
 const getBaseUrl = () => process.env.BRIDGECARD_BASE_URL;
+
+// Native AES-256-CBC Encryption to replace aes-everywhere
+function encryptPin(pin, secretKey) {
+    // We need a 32-byte key. If yours is shorter/longer, we pad/truncate.
+    const key = Buffer.alloc(32, secretKey, 'utf8'); 
+    // Bridgecard typically expects a zero-filled IV for simple PIN encryption
+    const iv = Buffer.alloc(16, 0); 
+
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(pin, 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+    return encrypted;
+}
 
 export async function registerCardholder(firstName, lastName, email, phone, bvn) {
     const SECRET_KEY = getSecretKey();
@@ -46,9 +58,8 @@ export async function issueNairaCard(cardholderId) {
     const SECRET_KEY = getSecretKey();
     const BASE_URL = getBaseUrl();
     
-    // Bridgecard requires a 4-digit PIN for Naira cards.
-    // In Sandbox, we encrypt '1234' using your Secret Key.
-    const encryptedPin = AES256.encrypt('1234', SECRET_KEY);
+    // Using the native encryption function instead of aes-everywhere
+    const encryptedPin = encryptPin('1234', SECRET_KEY);
 
     const response = await fetch(`${BASE_URL}/cards/create_card`, {
         method: 'POST',
@@ -61,7 +72,7 @@ export async function issueNairaCard(cardholderId) {
             card_type: "virtual",
             card_brand: "Mastercard",
             card_currency: "NGN",
-            pin: encryptedPin // REQUIRED for Naira cards
+            pin: encryptedPin 
         })
     });
 
