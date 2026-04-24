@@ -1,18 +1,24 @@
-// src/app/api/admin/setup-clan/route.js
 import { NextResponse } from 'next/server';
 import { registerCardholder, issueNairaCard } from '@/app/lib/bridgecard';
 
 export async function GET() {
     try {
-        // 1. Create the person
-        const regResult = await registerCardholder("System", "Member", "member@oreblogda.com", "07012345678", "22222879222");
+        // 1. Create the person (Using a fresh email and the sandbox BVN)
+        const regResult = await registerCardholder(
+            "Kaytee", 
+            "D System", 
+            `kaytee_${Date.now()}@oreblogda.com`, // Dynamic email to avoid "User Exists" error
+            "08062255406", 
+            "22222222222" // Official Sandbox BVN
+        );
 
         if (regResult.status !== "success") {
             return NextResponse.json({ error: "Registration failed", details: regResult }, { status: 400 });
         }
+        
         const cardholderId = regResult.data.cardholder_id;
 
-        // 2. Give them a card
+        // 2. Give them acard
         const cardDetails = await issueNairaCard(cardholderId);
 
         return NextResponse.json({
