@@ -3,8 +3,11 @@ import crypto from 'crypto';
 const baseUrl = process.env.BRIDGECARD_BASE_URL
 
 function encryptPin(pin, secretKey) {
+    // We need a 32-byte key. If yours is shorter/longer, we pad/truncate.
     const key = Buffer.alloc(32, secretKey, 'utf8');
+    // Bridgecard typically expects a zero-filled IV for simple PIN encryption
     const iv = Buffer.alloc(16, 0);
+
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(pin, 'utf8', 'base64');
     encrypted += cipher.final('base64');
@@ -49,7 +52,10 @@ export async function registerCardholder(firstName, lastName, email, phone, bvn)
 }
 
 export async function issueNairaCard(cardholderId) {
-    const SECRET_KEY = process.env.BRIDGECARD_SECRET_KEY
+    const SECRET_KEY = getSecretKey();
+    const BASE_URL = getBaseUrl();
+
+    // Using the native encryption function instead of aes-everywhere
     const encryptedPin = encryptPin('1234', SECRET_KEY);
 
     const response = await fetch(`${baseUrl}/cards/create_card`, {
