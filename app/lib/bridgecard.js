@@ -32,3 +32,28 @@ export async function registerCardholder(firstName, lastName, email, phone, bvn)
 
     return await response.json();
 }
+
+
+// src/app/lib/bridgecard.js (continued)
+
+export async function issueNairaCard(cardholderId) {
+  const url = `${BASE_URL}/naira_cards/create_card`;
+  
+  const payload = {
+    cardholder_id: cardholderId,
+    card_type: "virtual", // You can change to 'physical' in Live mode
+    card_brand: "mastercard",
+    currency: "NGN"
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'token': `Bearer ${SECRET_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return await response.json();
+}
