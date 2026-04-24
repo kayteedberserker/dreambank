@@ -1,8 +1,15 @@
+// src/app/lib/bridgecard.js
+import { AES256 } from 'aes-everywhere';
 
-const SECRET_KEY = process.env.BRIDGECARD_SECRET_KEY;
-const BASE_URL = process.env.BRIDGECARD_BASE_URL;
+// Use process.env directly inside the functions to ensure they 
+// always grab the latest value from the environment.
+const getSecretKey = () => process.env.BRIDGECARD_SECRET_KEY;
+const getBaseUrl = () => process.env.BRIDGECARD_BASE_URL;
 
 export async function registerCardholder(firstName, lastName, email, phone, bvn) {
+    const SECRET_KEY = getSecretKey();
+    const BASE_URL = getBaseUrl();
+
     const response = await fetch(`${BASE_URL}/cardholder/register_cardholder_synchronously`, {
         method: 'POST',
         headers: {
@@ -24,36 +31,41 @@ export async function registerCardholder(firstName, lastName, email, phone, bvn)
             },
             identity: {
                 id_type: "NIGERIAN_BVN_VERIFICATION",
-                bvn: bvn, // Use "22222222222" for sandbox testing
+                bvn: bvn || "22222222222", 
                 selfie_image: "https://oreblogda.com/test-avatar.jpg"
             }
         }),
     });
 
-    return await response.json();
+    const result = await response.json();
+    console.log("Register Result:", result);
+    return result;
 }
 
-
-// src/app/lib/bridgecard.js (continued)
-
 export async function issueNairaCard(cardholderId) {
-  const url = `${BASE_URL}/naira_cards/create_card`;
-  
-  const payload = {
-    cardholder_id: cardholderId,
-    card_type: "virtual", // You can change to 'physical' in Live mode
-    card_brand: "mastercard",
-    currency: "NGN"
-  };
+    const SECRET_KEY = getSecretKey();
+    const BASE_URL = getBaseUrl();
+    
+    // Bridgecard requires a 4-digit PIN for Naira cards.
+    // In Sandbox, we encrypt '1234' using your Secret Key.
+    const encryptedPin = AES256.encrypt('1234', SECRET_KEY);
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'token': `Bearer ${SECRET_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
+    const response = await fetch(`${BASE_URL}/cards/create_card`, {
+        method: 'POST',
+        headers: {
+            'token': `Bearer ${SECRET_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            cardholder_id: cardholderId,
+            card_type: "virtual",
+            card_brand: "Mastercard",
+            card_currency: "NGN",
+            pin: encryptedPin // REQUIRED for Naira cards
+        })
+    });
 
-  return await response.json();
+    const result = await response.json();
+    console.log("Issue Card Result:", result);
+    return result;
 }
