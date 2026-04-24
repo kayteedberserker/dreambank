@@ -10,7 +10,6 @@ export async function GET() {
         if (regResult.status !== "success") {
             return NextResponse.json({ error: "Registration failed", details: regResult }, { status: 400 });
         }
-
         const cardholderId = regResult.data.cardholder_id;
 
         // 2. Give them a card
