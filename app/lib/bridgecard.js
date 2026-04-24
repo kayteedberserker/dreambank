@@ -2,9 +2,14 @@ import crypto from 'crypto';
 
 // Use process.env directly inside the functions to ensure they 
 // always grab the latest value from the environment.
-const getSecretKey = () => process.env.BRIDGECARD_SECRET_KEY;
 const getBaseUrl = () => process.env.BRIDGECARD_BASE_URL;
-
+const getSecretKey = () => {
+    const key = process.env.BRIDGECARD_SECRET_KEY;
+    if (!key) {
+        console.error("❌ ERROR: BRIDGECARD_SECRET_KEY is missing from Environment!");
+    }
+    return key;
+};
 // Native AES-256-CBC Encryption to replace aes-everywhere
 function encryptPin(pin, secretKey) {
     // We need a 32-byte key. If yours is shorter/longer, we pad/truncate.
@@ -48,9 +53,9 @@ export async function registerCardholder(firstName, lastName, email, phone, bvn)
             }
         }),
     });
-
+    // This log is your best friend right now. Check it in Vercel Dashboard -> Logs
+    console.log("Full Bridgecard Response:", JSON.stringify(result, null, 2));
     const result = await response.json();
-    console.log("Register Result:", result);
     return result;
 }
 
